@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxia de Amor ✨</title>
+    <style>
+            :root {
+                --letter: rgba(20, 5, 25, 0.95);
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                user-select: none;
+            }
+
+            body, html {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background-color: #030008;
+                font-family: 'Segoe UI', Roboto, sans-serif;
+                position: fixed; /* Evita rebotes en móviles */
+            }
+
+            #canvas-galaxia {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 1;
+            }
+
+            .instrucciones {
+                position: fixed;
+                top: 25px;
+                width: 100%;
+                text-align: center;
+                color: #fff;
+                z-index: 10;
+                pointer-events: none;
+                text-shadow: 0 0 10px rgba(255, 77, 109, 0.8);
+            }
+
+            #contenedor-planetas {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 3;
+                pointer-events: none;
+            }
+
+            .planeta {
+                position: absolute;
+                transform: translate(-50%, -50%);
+                pointer-events: auto;
+                cursor: pointer;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                transition: transform 0.2s;
+            }
+
+            .planeta-nucleo {
+                width: 25px;
+                height: 25px;
+                border-radius: 50%;
+            }
+
+            .planeta-texto {
+                margin-top: 8px;
+                color: #fff;
+                font-size: 0.8rem;
+                font-weight: bold;
+                background: rgba(10, 2, 15, 0.6);
+                padding: 4px 10px;
+                border-radius: 10px;
+                border: 1px solid rgba(255, 77, 109, 0.3);
+                white-space: nowrap;
+            }
+
+            /* --- VENTANA MODAL CENTRADA Y RESPONSIVE --- */
+.Para_Ti {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Esto es lo que lo centra exactamente */
+    width: 90%;
+    max-width: 450px;
+    max-height: 80vh;
+    background: var(--letter);
+    z-index: 5;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 77, 109, 0.6);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 0 40px rgba(255, 77, 109, 0.3);
+    color: #fff;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+            .Para_Ti.visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .Para_Ti .contenido-scroll {
+                flex-grow: 1;
+                overflow-y: auto;
+                padding-right: 5px;
+                line-height: 1.6;
+                text-align: center;
+                font-style: italic;
+            }
+
+            .album-media {
+                width: 100%;
+                max-height: 35vh;
+                object-fit: contain;
+                border-radius: 12px;
+                margin: 10px 0;
+                transition: opacity 0.3s ease;
+
+            }
+
+            .album-controles {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 10px;
+            }
+
+            .btn-album {
+                background: rgba(255, 77, 109, 0.2);
+                border: 1px solid #ff4d6d;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+
+            .cerrar-btn {
+                background: #ff4d6d;
+                border: none;
+                color: white;
+                padding: 10px;
+                border-radius: 12px;
+                margin-top: 15px;
+                cursor: pointer;
+                font-weight: bold;
+            }
+            /* --- BOTÓN MEJORADO --- */
+#carta-boton {
+    margin-top: 20px;
+    padding: 12px;
+    background: linear-gradient(45deg, #ff4d6d, #8338ec);
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+#carta-boton:active { transform: scale(0.95); }
+
+            /* Estilos para que el scroll se vea mejor */
+            .contenido-scroll::-webkit-scrollbar { width: 5px; }
+            .contenido-scroll::-webkit-scrollbar-thumb { background: #ff4d6d; border-radius: 10px; }
+            /* Agrega esto al final de tus estilos */
+.titulo-oculto {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.alerta-custom {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(20, 5, 25, 0.95);
+    border: 1px solid #ff4d6d;
+    padding: 25px;
+    border-radius: 20px;
+    color: white;
+    text-align: center;
+    z-index: 100;
+    
+    /* ESTO ES LO IMPORTANTE PARA QUE APAREZCA */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s;
+}
+
+.alerta-custom.visible {
+    opacity: 1;
+    visibility: visible;
+}
+#carta-contenido {
+    transition: opacity 0.3s ease;
+    opacity: 1;
+}
+
+        </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <audio id="musica-fondo" loop src="Kevin Kaarl - Vamonos a Marte.mp3"></audio>
+
+    <div class="instrucciones">
+        <h1>NUESTRA GALAXIA DE AMOR</h1>
+        <p>Arrastrá para girar el universo y descubrí nuestros planetas</p>
+    </div>
+
+    <canvas id="canvas-galaxia"></canvas>
+    <div id="contenedor-planetas"></div>
+
+    <div class="Para_Ti" id="carta-amor">
+        <h2 id="carta-titulo">Para mi niña hermosa 💕</h2>
+        <div class="contenido-scroll" id="carta-contenido">
+            "Mirando esta galaxia me di cuenta de que, entre tantos millones de estrellas y posibilidades en el universo, mi coincidencia favorita siempre vas a ser vos. Gracias por iluminar mi mundo cada día."
+        </div>
+        <button id="carta-boton" onclick="cerrarCartaInicial()">Seguir explorando ✨</button>
+    </div>
+<div class="alerta-custom" id="mi-alerta">
+    <h3 style="color: #ff4d6d; margin-bottom: 10px;">Tu bebito dice</h3>
+    <p>Pasame mas fotos y videos tuyos mi niña hermosa 💕 así los agrego al album conforme el tiempo y tener un lindo recuerdo.</p>
+    <button class="cerrar-btn" onclick="cerrarAlertaCustom()">Shi mi bebito</button>
+</div>
+
+    <script>
+        // --- ARCHIVOS DE TU CARPETA CARGADOS AUTOMÁTICAMENTE ---
+        const itemsAlbum = [
+            { tipo: 'foto', src: 'Foto 1.png' },
+            { tipo: 'foto', src: 'Foto 2.jpeg' },
+            { tipo: 'foto', src: 'Foto 3.jpeg' },
+            { tipo: 'foto', src: 'Foto 4.jpeg' },
+            { tipo: 'foto', src: 'Foto 5.jpeg' },
+            { tipo: 'foto', src: 'Foto 6.jpeg' },
+            { tipo: 'foto', src: 'Foto 7.jpeg' },
+            { tipo: 'foto', src: 'Foto 8.jpeg' },
+            { tipo: 'foto', src: 'Foto 9.jpeg' },
+            { tipo: 'foto', src: 'Foto 10.jpeg' },
+
+            { tipo: 'video', src: 'Primer video.mp4' },
+            { tipo: 'video', src: 'Segundo video.mp4' },
+            { tipo: 'video', src: 'Tercer video.mp4' },
+            { tipo: 'video', src: 'Cuarto video.mp4' },
+            { tipo: 'video', src: 'Quinto video.mp4' },
+            { tipo: 'video', src: 'Sexto video.mp4' },
+            { tipo: 'video', src: 'Septimo video.mp4' },
+            { tipo: 'video', src: 'Octavo video.mp4' },
+            { tipo: 'video', src: 'Noveno video.mp4' }
+        ];
+
+        let indiceActualAlbum = 0;
+        let albumEstaAbierto = false;
+        let bloqueado = false;
+
+        // --- CONFIGURACIÓN DE LOS PLANETAS DE TEXTO --- 
+        const datosPlanetas = [
+            { id: "historia", titulo: "La historia de como te conoci 💕", texto: "Al principio creí que conocerte sería algo pasajero, de esas coincidencias comunes de la vida. Pero el destino tenía otros planes. Cada charla con vos empezó a transformarse en el momento más feliz de mi día. Cuando me dejabas tus primeras indirectas, los nervios me ganaban por completo, aunque por dentro intentaba convencerme de que era solo una broma para no ilusionarme de más. Hasta que llegó ese día... el día en que fuiste directa. No lo podía creer. Sentí un torbellino de emociones, una mezcla de timidez absoluta y dudas de si un amor tan lindo podía ser real. Después de charlarlo con un amigo que me dio el empujón definitivo para arriesgarme por algo verdadero, decidí dejarme llevar. Primero me cautivaste en el grupo por tu forma de ser y por cómo me hacías sentir, pero desde el primer día en que nos pusimos de novios, me empezaste a enamorar cada vez más con tus encantos... hasta que caí por completo en tus garras y ahora soy enteramente tuyo. Mi vida cambió desde que estás en ella. Era tan obvio lo enamorado que estaba que mis amigos notaron ensevisa mi felicidad, y hasta mis papás me decían que me veían flotando en las nubes mientras yo intentaba disimular y fingir demencia. Hoy no puedo más que agradecerle al universo por cruzarte en mi camino; soy el más feliz desde que te conocí.", radio: 140, angulo: 0, color: "#ff4d6d" },
+            { id: "canciones", titulo: "Canciones que me dedicaste 🎵", texto: "Quiero agradecerte con todo mi corazón por cada canción que me dedicaste y por cada video que armaste de nosotros. No te das una idea de lo mucho que significan para mí. Todos los días me guardo un momento especial para volver a escuchar tus temas, y cuando llega la noche, mi refugio favorito es mirar una y otra vez las fotos y los videos que me mandás.\n\nEs mi forma de tenerte cerca, porque no hay una sola noche en la que no estés en mis pensamientos. Me gusta creer que el amor desafía cualquier distancia, y que si pienso en vos con la fuerza suficiente justo antes de dormir, el universo me va a conceder el milagro de volver a encontrarte en mis sueños.", radio: 210, angulo: 1.2, color: "#9d4edd" },
+            { id: "album", titulo: "Nuestro Álbum de Recuerdos 📸", texto: "Aca va el album", radio: 280, angulo: 2.4, color: "#ff85a1" },
+            { id: "noches", titulo: "Nuestras Noches Juntos 🌙", texto: "De todos los momentos del día, mi favorito por lejos es cuando llega la noche y por fin nos conectamos. No importa lo largo o cansador que haya sido el día, escuchar tu voz del otro lado de la línea hace que todo lo malo desaparezca. Me encanta quedarme hablando con vos de cualquier tontería, compartir risas bajito y simplemente sentirte cerca a pesar de la distancia. Es hermoso cómo el sueño nos va ganando de a poco, hasta que nos quedamos dormidos juntos en la llamada. Saber que lo último que escucho antes de cerrar los ojos es tu respiración o tu voz dándome las buenas noches es mi mayor refugio. Es nuestra forma de abrazarnos a la distancia.", radio: 350, angulo: 3.6, color: "#3a0ca3" },
+            { id: "enamora", titulo: "Lo que me enamora de vos 💕", texto: "Si tuviera que hacer una lista de todas las cosas que me enamoran de vos, no terminaría nunca. Me fascina tu forma de ver la vida, la manera en que me hacés reír cuando más lo necesito y la dulzura con la que me hablás. Tenés esa magia única de cambiar mi día por completo con un solo mensaje. Sos mi refugio, mi cable a tierra y la persona que tiene los encantos más lindos del mundo. Caer en tus garras fue, sin dudas, lo mejor que me pasó en la vida.", radio: 410, angulo: 4.8, color: "#ff758f" },
+            { id: "viaje", titulo: "Viaje Juntos ⛰️", texto: "A lo largo de estos meses, planear el día de nuestro encuentro se volvió mi motor diario. Sé que a veces la distancia pesa y que el camino exige que nos esforcemos el doble en nuestros estudios y trabajos para juntar la plata que nos permita vernos, pero te juro que cada segundo de espera va a valer la pena. Cuando por fin estemos frente a frente, una de las cosas que más deseo es conocer a tus papás; quiero que me conozcan, que sepan cuánto te amo y que vean lo en serio que voy con vos.\n\nA partir de ahí, el universo es nuestro: imagino nuestra primera cita perfecta y el comienzo de mil aventuras. Me haría re feliz que nuestro primer gran viaje sea a Bolivia, pero lo que más me ilusiona es saber qué otras partes del mundo te gustaría descubrir de mi mano. No importa el mapa, siempre y cuando mi destino seas vos.", radio: 470, angulo: 5.8, color: "#240046" }
+        ];
+
+        // --- ENTORNO THREE.JS ---
+        const canvas = document.querySelector('#canvas-galaxia');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 2, 4); camera.lookAt(0,0,0);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // --- PARTÍCULAS GALAXIA ---
+        const cantidadParticulas = 8000;
+        const posiciones = new Float32Array(cantidadParticulas * 3);
+        const colores = new Float32Array(cantidadParticulas * 3);
+        const colorAdentro = new THREE.Color('#ff4d6d'), colorAfuera = new THREE.Color('#240046');  
+
+        for(let i = 0; i < cantidadParticulas; i++) {
+            const i3 = i * 3, radio = Math.random() * 5, anguloEspiral = (i % 3) * ((2 * Math.PI) / 3), anguloGiro = radio * 1.5;
+            posiciones[i3] = Math.cos(anguloEspiral + anguloGiro) * radio + (Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1)) * 0.4;
+            posiciones[i3 + 1] = (Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1)) * 0.4;
+            posiciones[i3 + 2] = Math.sin(anguloEspiral + anguloGiro) * radio + (Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1)) * 0.4;
+            const c = colorAdentro.clone().lerp(colorAfuera, radio / 5);
+            colores[i3] = c.r; colores[i3 + 1] = c.g; colores[i3 + 2] = c.b;
+        }
+        const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(posiciones, 3)); geo.setAttribute('color', new THREE.BufferAttribute(colores, 3));
+        const galaxia = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.035, vertexColors: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+        scene.add(galaxia);
+
+        // --- CREADOR DE PLANETAS EN PANTALLA ---
+        const contenedor = document.getElementById('contenedor-planetas');
+        const elementosPlanetas = [];
+
+        datosPlanetas.forEach((p) => {
+            const div = document.createElement('div'); div.className = 'planeta';
+            const nucleo = document.createElement('div'); nucleo.className = 'planeta-nucleo';
+            nucleo.style.background = `radial-gradient(circle at 30% 30%, #fff, ${p.color})`;
+            nucleo.style.boxShadow = `0 0 15px ${p.color}, 0 0 25px ${p.color}`;
+            const texto = document.createElement('div'); texto.className = 'planeta-texto'; texto.innerText = p.titulo;
+            div.appendChild(nucleo); div.appendChild(texto); contenedor.appendChild(div);
+
+            elementosPlanetas.push({ element: div, data: p });
+
+            div.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (p.id === 'album') { abrirAlbum(); } else { mostrarRecuerdoPlaneta(p.titulo, p.texto); }
+            });
+        });
+
+        // --- CONTROLADORES DE EVENTOS ---
+        let targetX = 0, targetY = 0, isDragging = false, previoMouseX = 0, previoMouseY = 0;
+        function arrancar(x, y) { isDragging = true; previoMouseX = x; previoMouseY = y; }
+        function mover(x, y) { if (!isDragging) return; targetX += (x - previoMouseX) * 0.005; targetY += (y - previoMouseY) * 0.005; previoMouseX = x; previoMouseY = y; }
+        window.addEventListener('mousedown', (e) => { if(!e.target.closest('.planeta') && !e.target.closest('.Para_Ti') && !e.target.closest('.alerta-custom')) arrancar(e.clientX, e.clientY); });
+        window.addEventListener('mousemove', (e) => mover(e.clientX, e.clientY)); window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('touchstart', (e) => { if(!e.target.closest('.planeta') && !e.target.closest('.Para_Ti') && !e.target.closest('.alerta-custom')) arrancar(e.touches[0].clientX, e.touches[0].clientY); });
+        window.addEventListener('touchmove', (e) => mover(e.touches[0].clientX, e.touches[0].clientY)); window.addEventListener('touchend', () => isDragging = false);
+
+        window.addEventListener('DOMContentLoaded', () => { document.getElementById('carta-amor').classList.add('visible'); });
+
+        function cerrarCartaInicial() {
+            document.getElementById('carta-amor').classList.remove('visible');
+            document.getElementById('musica-fondo').volume = 0.25
+            document.getElementById('musica-fondo').play().catch(() => console.log("Esperando clic inicial"));
+            setTimeout(() => {
+                document.getElementById('carta-boton').innerText = "Cerrar planeta 🌍";
+                document.getElementById('carta-boton').setAttribute("onclick", "cerrarVisorPlaneta()");
+            }, 500);
+        }
+
+// Función para abrir planetas de texto
+function mostrarRecuerdoPlaneta(titulo, texto) {
+    albumEstaAbierto = false;
+    document.getElementById('carta-titulo').innerText = titulo;
+    document.getElementById('carta-contenido').innerHTML = texto.replace(/\n/g, "<br>");
+    document.getElementById('carta-amor').classList.add('visible');
+    
+    // OCULTAR TÍTULO
+    document.querySelector('.instrucciones').classList.add('titulo-oculto');
+}
+
+// Función para cerrar (aquí mostramos el mensaje final)
+function cerrarVisorPlaneta() { 
+    document.getElementById('carta-amor').classList.remove('visible'); 
+    
+    // MOSTRAR TÍTULO DE NUEVO
+    document.querySelector('.instrucciones').classList.remove('titulo-oculto');
+    
+    const contenedor = document.getElementById('contenedor-planetas');
+    contenedor.style.display = 'block';
+    contenedor.style.pointerEvents = 'auto';
+    
+    // MENSAJE ESPECIAL SI ES EL ÁLBUM
+    if (albumEstaAbierto) {
+        albumEstaAbierto = false; 
+        
+        // Simplemente mostramos el div que ya tienes en el HTML
+        setTimeout(() => {
+            const alerta = document.getElementById('mi-alerta');
+            if(alerta) {
+                alerta.classList.add('visible');
+            }
+        }, 400);
+    }
+}
+
+        // --- SISTEMA INTERACTIVO DEL ÁLBUM ---
+// Función para abrir álbum
+function abrirAlbum() {
+    document.getElementById('carta-titulo').innerText = "Nuestro Álbum de Recuerdos 📸";
+    indiceActualAlbum = 0;
+    albumEstaAbierto = true;
+    actualizarHtmlAlbum();
+    document.getElementById('carta-amor').classList.add('visible');
+    
+    // OCULTAR TÍTULO
+    document.querySelector('.instrucciones').classList.add('titulo-oculto');
+}
+function actualizarHtmlAlbum() {
+    const contenedor = document.getElementById('carta-contenido');
+    
+    // 1. Efecto de desvanecimiento al salir
+    contenedor.style.opacity = "0";
+
+    setTimeout(() => {
+        const item = itemsAlbum[indiceActualAlbum];
+        let recursoHtml = "";
+        
+        if (item.tipo === 'foto') {
+            recursoHtml = `<img src="${item.src}" class="album-media" alt="Foto de recuerdo">`;
+        } else {
+            recursoHtml = `<video class="album-media" src="${item.src}" controls></video>`;
+        }
+
+        // 2. Actualizamos el contenido
+        contenedor.innerHTML = `
+            <div class="album-contenedor" id="contenedor-activo">
+                ${recursoHtml}
+                <div class="album-controles">
+                    <button class="btn-album" onclick="cambiarItemAlbum(-1)">◀ Anterior</button>
+                    <span style="font-size:0.8rem; opacity:0.6; align-self:center;">${indiceActualAlbum + 1} / ${itemsAlbum.length}</span>
+                    <button class="btn-album" onclick="cambiarItemAlbum(1)">Siguiente ▶</button>
+                </div>
+            </div>
+        `;
+        
+        // 3. Efecto de desvanecimiento al entrar
+        contenedor.style.opacity = "1";
+    }, 200); // Tiempo de la transición
+}
+
+        function cambiarItemAlbum(direccion) {
+    // 1. Si está bloqueado, no permitimos ninguna acción
+    if (bloqueado) return;
+    
+    // 2. Bloqueamos inmediatamente el sistema
+    bloqueado = true;
+    
+    // 3. Lógica especial: Si llega al final y presiona "siguiente", cerramos
+    if (direccion === 1 && indiceActualAlbum === itemsAlbum.length - 1) {
+        cerrarVisorPlaneta();
+        // Desbloqueamos porque ya cerramos el visor
+        bloqueado = false;
+        return;
+    }
+
+    // 4. Cambiamos el índice
+    indiceActualAlbum += direccion;
+    
+    // Ajuste de límites (circular)
+    if (indiceActualAlbum < 0) indiceActualAlbum = itemsAlbum.length - 1;
+    if (indiceActualAlbum >= itemsAlbum.length) indiceActualAlbum = 0;
+    
+    // 5. Actualizamos el HTML con la nueva imagen/video
+
+    actualizarHtmlAlbum();
+
+    // 6. Desbloqueamos después de un tiempo prudencial (ej. 400ms)
+    // Esto evita que ella haga clics rápidos y se "rompa" el índice
+    setTimeout(() => {
+        bloqueado = false;
+    }, 400); 
+}
+        function cerrarAlertaCustom() {
+    const alerta = document.getElementById('mi-alerta');
+    if (alerta) {
+        alerta.classList.remove('visible');
+    }
+}
+
+        // --- ANIMACIÓN DE ÓRBITAS ---
+        const reloj = new THREE.Clock();
+        function animar() {
+            const tiempo = reloj.getElapsedTime();
+            galaxia.rotation.y = tiempo * 0.05;
+            scene.rotation.y += (targetX - scene.rotation.y) * 0.05;
+            scene.rotation.x += (targetY - scene.rotation.x) * 0.05;
+
+            const centroX = window.innerWidth / 2, centroY = window.innerHeight / 2;
+            elementosPlanetas.forEach((p) => {
+                const anguloTotal = p.data.angulo + (tiempo * 0.04) + scene.rotation.y;
+                const factPersp = Math.cos(scene.rotation.x);
+                const posX = centroX + Math.cos(anguloTotal) * p.data.radio;
+                const posY = centroY + Math.sin(anguloTotal) * p.data.radio * factPersp + (scene.rotation.x * 80);
+                p.element.style.left = `${posX}px`; p.element.style.top = `${posY}px`;
+                p.element.style.opacity = Math.sin(anguloTotal - 1.5) < -0.2 ? 0.35 : 1;
+            });
+            renderer.render(scene, camera); requestAnimationFrame(animar);
+        }
+        animar();
+
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+    </script>
+</body>
+</html>
